@@ -12,4 +12,3 @@ print(f"Test:  {model.score(X_test, y_test):.4f}")
 
 # Spara modellen
 joblib.dump(model, "models/random_forest.pkl")
-print("Modell sparad!")
