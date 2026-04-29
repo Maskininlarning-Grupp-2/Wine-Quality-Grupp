@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
-df= pd.read_csv('dataset/WineQT.csv')
+df= pd.read_csv('../dataset/WineQT.csv')
 
 X= df.drop(['quality', 'Id'], axis=1)
 y=df.quality
