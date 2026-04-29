@@ -18,6 +18,7 @@ class Window(QMainWindow):
         validator = QDoubleValidator(0.0, 100.0, 5)
         locale = QLocale(QLocale.Language.English)
         validator.setLocale(locale)
+        validator.setNotation(QDoubleValidator.Notation.StandardNotation)
         # Layout
         layout = QGridLayout()
 
@@ -88,8 +89,8 @@ class Window(QMainWindow):
         input_data.setFixedSize(150, 30)
         input_data.clicked.connect(lambda: self.create_data(fixed_acidity.text(), volatile_acidity.text(), citric_acid.text(), residual_sugar.text(), chlorides.text(), free_sulfur_dioxide.text(), total_sulfur_dioxide.text(), density.text(), pH.text(), sulphates.text(), alcohol.text()))
 
-        # Lazy shi
-        fixed_acidity.setText('7.4')
+        # Testing Values - Correct Quality = 5
+        '''fixed_acidity.setText('7.4')
         volatile_acidity.setText('0.700')
         citric_acid.setText('0.0')
         residual_sugar.setText('1.9')
@@ -99,7 +100,7 @@ class Window(QMainWindow):
         sulphates.setText('0.56')
         density.setText('0.99780')
         pH.setText('3.51')
-        alcohol.setText('9.4')
+        alcohol.setText('9.4')'''
 
         # layout handling
         layout.addWidget(fixed_acidity_title, 0, 0)
@@ -138,12 +139,6 @@ class Window(QMainWindow):
         layout.addWidget(input_data, 12, 0)
         layout.addWidget(self.pred_results_title, 10, 1)
         layout.addWidget(self.pred_results, 11, 1, 2, 0)
-
-        '''layout.addWidget(logistic_regression, 12, 0)
-        layout.addWidget(support_vector_machine, 12, 1)
-
-        layout.addWidget(decision_tree, 13, 0)
-        layout.addWidget(random_forest, 13, 1)'''
 
         widget = QWidget()
         widget.setLayout(layout)
@@ -218,8 +213,8 @@ class ModelBox(QDialog):
         try:
             clf = joblib.load(f'./models/{algorithm}.pkl')
             self.prediction_data.append(algorithm.replace('_', ' ').upper())
-            self.prediction_data.append(clf.predict(self.df))
-            self.prediction_data.append(clf.predict_proba(self.df))
+            self.prediction_data.append(clf.predict(self.df.values))
+            self.prediction_data.append(clf.predict_proba(self.df.values))
         except Exception as e:
             print(f"Model could not be loaded:\n"
                   f"{e}")
