@@ -1,9 +1,12 @@
 import sys
 
-from PyQt6.QtCore import Qt
+import joblib
+import pandas as pd
+from PyQt6.QtCore import Qt, QLocale
 from PyQt6.QtGui import QDoubleValidator, QIntValidator
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QVBoxLayout, QTextEdit, QLabel, \
-    QGridLayout, QLineEdit
+    QGridLayout, QLineEdit, QMessageBox, QDialog
+from pandas import DataFrame
 
 
 class Window(QMainWindow):
@@ -12,75 +15,91 @@ class Window(QMainWindow):
 
         self.setWindowTitle('Wine Quality Prediction')
         self.setFixedSize(400, 600)
+        validator = QDoubleValidator(0.0, 100.0, 5)
+        locale = QLocale(QLocale.Language.English)
+        validator.setLocale(locale)
         # Layout
         layout = QGridLayout()
 
         # Widgets
         fixed_acidity = QLineEdit()
-        fixed_acidity.setValidator(QDoubleValidator())
+        fixed_acidity.setValidator(validator)
         fixed_acidity.setFixedSize(150, 30)
         fixed_acidity_title = QLabel('Fixed acidity')
 
         volatile_acidity = QLineEdit()
-        volatile_acidity.setValidator(QDoubleValidator())
+        volatile_acidity.setValidator(validator)
         volatile_acidity.setFixedSize(150, 30)
         volatile_acidity_title = QLabel('Volatile acidity')
 
         citric_acid = QLineEdit()
-        citric_acid.setValidator(QDoubleValidator())
+        citric_acid.setValidator(validator)
         citric_acid.setFixedSize(150, 30)
         citric_acid_title = QLabel('Citric acid')
 
         residual_sugar = QLineEdit()
-        residual_sugar.setValidator(QDoubleValidator())
+        residual_sugar.setValidator(validator)
         residual_sugar.setFixedSize(150, 30)
         residual_sugar_title = QLabel('Residual sugar')
 
         chlorides = QLineEdit()
-        chlorides.setValidator(QDoubleValidator())
+        chlorides.setValidator(validator)
         chlorides.setFixedSize(150, 30)
         chlorides_title = QLabel('Chlorides')
 
         free_sulfur_dioxide = QLineEdit()
-        free_sulfur_dioxide.setValidator(QDoubleValidator())
+        free_sulfur_dioxide.setValidator(validator)
         free_sulfur_dioxide.setFixedSize(150, 30)
         free_sulfur_dioxide_title = QLabel('Free sulfur dioxide')
 
 
         total_sulfur_dioxide = QLineEdit()
-        total_sulfur_dioxide.setValidator(QDoubleValidator())
+        total_sulfur_dioxide.setValidator(validator)
         total_sulfur_dioxide.setFixedSize(150, 30)
         total_sulfur_dioxide_title = QLabel('Total sulfur dioxide')
 
         density = QLineEdit()
-        density.setValidator(QDoubleValidator())
+        density.setValidator(validator)
         density.setFixedSize(150, 30)
         density_title = QLabel('Density')
 
         pH = QLineEdit()
-        pH.setValidator(QDoubleValidator())
+        pH.setValidator(validator)
         pH.setFixedSize(150, 30)
         pH_title = QLabel('PH')
 
         sulphates = QLineEdit()
-        sulphates.setValidator(QDoubleValidator())
+        sulphates.setValidator(validator)
         sulphates.setFixedSize(150, 30)
         sulphates_title = QLabel('Sulphates')
 
         alcohol = QLineEdit()
-        alcohol.setValidator(QDoubleValidator())
+        alcohol.setValidator(validator)
         alcohol.setFixedSize(150, 30)
         alcohol_title = QLabel('Alcohol')
 
+        self.pred_results = QTextEdit()
+        self.pred_results.setFixedSize(150, 160)
+        self.pred_results.setReadOnly(True)
+        self.pred_results_title = QLabel('Prediction results: ')
+
         # Buttons
-        support_vector_machine = QPushButton('SVM')
-        support_vector_machine.setFixedSize(150, 30)
-        decision_tree = QPushButton('Decision Tree')
-        decision_tree.setFixedSize(150, 30)
-        random_forest = QPushButton('Random Forest')
-        random_forest.setFixedSize(150, 30)
-        logistic_regression = QPushButton('Logistic Regression')
-        logistic_regression.setFixedSize(150, 30)
+        input_data = QPushButton('Input Data')
+        input_data.setFixedSize(150, 30)
+        input_data.clicked.connect(lambda: self.create_data(fixed_acidity.text(), volatile_acidity.text(), citric_acid.text(), residual_sugar.text(), chlorides.text(), free_sulfur_dioxide.text(), total_sulfur_dioxide.text(), density.text(), pH.text(), sulphates.text(), alcohol.text()))
+
+        # Lazy shi
+        fixed_acidity.setText('7.4')
+        volatile_acidity.setText('0.700')
+        citric_acid.setText('0.0')
+        residual_sugar.setText('1.9')
+        chlorides.setText('0.076')
+        free_sulfur_dioxide.setText('11.0')
+        total_sulfur_dioxide.setText('34.0')
+        sulphates.setText('0.56')
+        density.setText('0.99780')
+        pH.setText('3.51')
+        alcohol.setText('9.4')
 
         # layout handling
         layout.addWidget(fixed_acidity_title, 0, 0)
@@ -116,18 +135,98 @@ class Window(QMainWindow):
         layout.addWidget(alcohol_title, 8, 1)
         layout.addWidget(alcohol, 9, 1)
 
-        layout.addWidget(logistic_regression, 12, 0)
+        layout.addWidget(input_data, 12, 0)
+        layout.addWidget(self.pred_results_title, 10, 1)
+        layout.addWidget(self.pred_results, 11, 1, 2, 0)
+
+        '''layout.addWidget(logistic_regression, 12, 0)
         layout.addWidget(support_vector_machine, 12, 1)
 
         layout.addWidget(decision_tree, 13, 0)
-        layout.addWidget(random_forest, 13, 1)
-
-
+        layout.addWidget(random_forest, 13, 1)'''
 
         widget = QWidget()
         widget.setLayout(layout)
 
         self.setCentralWidget(widget)
+
+    def create_data(self, fixed_acidity, volatile_acidity, citric_acid, residual_sugar, chlorides, free_sulfur_dioxide, total_sulfur_dioxide, density, pH, sulphates, alcohol):
+        data = {
+            'fixed acidity': [fixed_acidity],
+            'volatile acidity': [volatile_acidity],
+            'citric acid': [citric_acid],
+            'residual sugar': [residual_sugar],
+            'chlorides': [chlorides],
+            'free sulfur dioxide': [free_sulfur_dioxide],
+            'total sulfur dioxide': [total_sulfur_dioxide],
+            'density': [density],
+            'pH': [pH],
+            'sulphates': [sulphates],
+            'alcohol': [alcohol]
+        }
+        try:
+            dlg = ModelBox(pd.DataFrame(data))
+        except Exception as e:
+            print(e)
+        if dlg.exec():
+            try:
+                self.pred_results_title.setText(dlg.pred()[0])
+                self.pred_results.setText(f"Quality Prediction: {dlg.pred()[1][0]}\n"
+                                          f"---Accuracy Data---\n"
+                                          f"Likelihood of 3: {dlg.pred()[2][0][0]}\n"
+                                          f"Likelihood of 4: {dlg.pred()[2][0][1]}\n"
+                                          f"Likelihood of 5: {dlg.pred()[2][0][2]}\n"
+                                          f"Likelihood of 6: {dlg.pred()[2][0][3]}\n"
+                                          f"Likelihood of 7: {dlg.pred()[2][0][4]}\n"
+                                          f"Likelihood of 8: {dlg.pred()[2][0][5]}\n")
+            except Exception as e:
+                print(e)
+
+class ModelBox(QDialog):
+    prediction_data = []
+    def __init__(self, df: DataFrame):
+        super().__init__()
+        self.df = df
+
+        self.setWindowTitle("Select Algorithm")
+
+        layout = QVBoxLayout()
+        support_vector_machine = QPushButton('SVM')
+        support_vector_machine.clicked.connect(lambda: self.model_predict("svm"))
+        support_vector_machine.clicked.connect(self.accept)
+
+        decision_tree = QPushButton('Decision Tree')
+        decision_tree.clicked.connect(lambda: self.model_predict("decision_tree"))
+        decision_tree.clicked.connect(self.accept)
+
+        random_forest = QPushButton('Random Forest')
+        random_forest.clicked.connect(lambda: self.model_predict("random_forest"))
+        random_forest.clicked.connect(self.accept)
+
+        logistic_regression = QPushButton('Logistic Regression')
+        logistic_regression.clicked.connect(lambda: self.model_predict("logistic_regression"))
+        logistic_regression.clicked.connect(self.accept)
+
+        layout.addWidget(support_vector_machine)
+        layout.addWidget(decision_tree)
+        layout.addWidget(random_forest)
+        layout.addWidget(logistic_regression)
+
+        self.setLayout(layout)
+    def model_predict(self, algorithm):
+        self.prediction_data.clear()
+        try:
+            clf = joblib.load(f'./models/{algorithm}.pkl')
+            self.prediction_data.append(algorithm.replace('_', ' ').upper())
+            self.prediction_data.append(clf.predict(self.df))
+            self.prediction_data.append(clf.predict_proba(self.df))
+        except Exception as e:
+            print(f"Model could not be loaded:\n"
+                  f"{e}")
+    def pred(self):
+        return self.prediction_data
+
+
 app = QApplication(sys.argv)
 
 window = Window()
