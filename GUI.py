@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QVB
     QGridLayout, QLineEdit, QMessageBox, QDialog
 from pandas import DataFrame
 
+demo_mode = False
 
 class Window(QMainWindow):
     def __init__(self):
@@ -89,18 +90,18 @@ class Window(QMainWindow):
         input_data.setFixedSize(150, 30)
         input_data.clicked.connect(lambda: self.create_data(fixed_acidity.text(), volatile_acidity.text(), citric_acid.text(), residual_sugar.text(), chlorides.text(), free_sulfur_dioxide.text(), total_sulfur_dioxide.text(), density.text(), pH.text(), sulphates.text(), alcohol.text()))
 
-        # Testing Values - Correct Quality = 5
-        '''fixed_acidity.setText('7.4')
-        volatile_acidity.setText('0.700')
-        citric_acid.setText('0.0')
-        residual_sugar.setText('1.9')
-        chlorides.setText('0.076')
-        free_sulfur_dioxide.setText('11.0')
-        total_sulfur_dioxide.setText('34.0')
-        sulphates.setText('0.56')
-        density.setText('0.99780')
-        pH.setText('3.51')
-        alcohol.setText('9.4')'''
+        if demo_mode:
+            fixed_acidity.setText('7.4')
+            volatile_acidity.setText('0.700')
+            citric_acid.setText('0.0')
+            residual_sugar.setText('1.9')
+            chlorides.setText('0.076')
+            free_sulfur_dioxide.setText('11.0')
+            total_sulfur_dioxide.setText('34.0')
+            sulphates.setText('0.56')
+            density.setText('0.99780')
+            pH.setText('3.51')
+            alcohol.setText('9.4')
 
         # layout handling
         layout.addWidget(fixed_acidity_title, 0, 0)
@@ -162,7 +163,7 @@ class Window(QMainWindow):
         try:
             dlg = ModelBox(pd.DataFrame(data))
         except Exception as e:
-            print(e)
+            QMessageBox.warning(self, "Error", str(e))
         if dlg.exec():
             try:
                 self.pred_results_title.setText(dlg.pred()[0])
@@ -174,8 +175,8 @@ class Window(QMainWindow):
                                           f"Likelihood of 6: {dlg.pred()[2][0][3]}\n"
                                           f"Likelihood of 7: {dlg.pred()[2][0][4]}\n"
                                           f"Likelihood of 8: {dlg.pred()[2][0][5]}\n")
-            except Exception as e:
-                print(e)
+            except Exception:
+                QMessageBox.warning(self, "Error", "Data input empty!")
 
 class ModelBox(QDialog):
     prediction_data = []
@@ -216,8 +217,7 @@ class ModelBox(QDialog):
             self.prediction_data.append(clf.predict(self.df.values))
             self.prediction_data.append(clf.predict_proba(self.df.values))
         except Exception as e:
-            print(f"Model could not be loaded:\n"
-                  f"{e}")
+            pass
     def pred(self):
         return self.prediction_data
 
