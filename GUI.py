@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QVB
     QGridLayout, QLineEdit, QMessageBox, QDialog
 from pandas import DataFrame
 
-demo_mode = False
+demo_mode = True
 
 class Window(QMainWindow):
     def __init__(self):
@@ -176,7 +176,7 @@ class Window(QMainWindow):
                                           f"Likelihood of 7: {dlg.pred()[2][0][4]}\n"
                                           f"Likelihood of 8: {dlg.pred()[2][0][5]}\n")
             except Exception:
-                QMessageBox.warning(self, "Error", "Data input empty!")
+                QMessageBox.warning(self, "Error", "Data input empty or faulty!")
 
 class ModelBox(QDialog):
     prediction_data = []
